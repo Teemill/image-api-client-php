@@ -24,12 +24,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Teemill/ImageApi\\Client\\": "src"
+            "Teemill\\ImageApi\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Teemill/ImageApi\\Client\\Tests\\": "tests"
+            "Teemill\\ImageApi\\Tests\\": "tests"
         }
     },
     "scripts": {
