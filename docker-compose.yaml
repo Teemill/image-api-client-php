@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  php:
+    tty: true
+    image: docker.io/bitnami/php-fpm:8.0
+    ports:
+      - 9000:9000
+    volumes:
+      - .:/app
