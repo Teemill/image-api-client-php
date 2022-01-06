@@ -13,3 +13,5 @@
 /art                     export-ignore
 /docs                    export-ignore
 /UPGRADING.md            export-ignore
+/docker-compose.yaml     export-ignore
+/ray.php                 export-ignore
