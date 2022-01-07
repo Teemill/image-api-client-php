@@ -50,6 +50,14 @@ class Client
         );
     }
 
+    /**
+     * @throws GuzzleException
+     */
+    public function healthz(): array
+    {
+        return $this->sendClientRequest('GET', 'healthz');
+    }
+
     public static function isCompatibleMime(string $mime): bool
     {
         return in_array($mime, static::compatible_mimes);
@@ -73,7 +81,7 @@ class Client
     protected function sendClientRequest(
         string $method,
         string $resource,
-        array  $data
+        array  $data = []
     ): array {
         $response = $this->client->request(
             $method,

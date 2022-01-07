@@ -36,3 +36,21 @@ it('can upload an image to a specified directory', function () {
         ->id->toEqual('example.jpg')
         ->resource->toEqual('https://images.localhost:8080/example.jpg');
 });
+
+it('can perform a health check', function () {
+    $client = createMockClient([
+        new Response(200, [], json_encode([
+            'status' => 'UP',
+            'version' => '0.0.1',
+            'cache' => 'connected',
+        ], JSON_THROW_ON_ERROR)),
+    ]);
+
+    $response = $client->healthz();
+
+    expect($response)
+        ->toBeArray()
+        ->status->toEqual('UP')
+        ->version->toEqual('0.0.1')
+        ->cache->toEqual('connected');
+});
