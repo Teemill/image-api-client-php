@@ -23,8 +23,7 @@ class Client
     public function __construct(
         ClientInterface $client,
         string          $secret
-    )
-    {
+    ) {
         $this->secret = $secret;
         $this->client = $client;
 
@@ -83,8 +82,7 @@ class Client
         string $method,
         string $resource,
         array  $data = []
-    ): array
-    {
+    ): array {
         $response = $this->client->request(
             $method,
             $resource,
