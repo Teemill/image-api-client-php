@@ -23,7 +23,8 @@ class Client
     public function __construct(
         ClientInterface $client,
         string          $secret
-    ) {
+    )
+    {
         $this->secret = $secret;
         $this->client = $client;
 
@@ -50,6 +51,14 @@ class Client
         );
     }
 
+    /**
+     * @throws GuzzleException
+     */
+    public function healthz(): array
+    {
+        return $this->sendClientRequest('GET', 'healthz');
+    }
+
     public static function isCompatibleMime(string $mime): bool
     {
         return in_array($mime, static::compatible_mimes);
@@ -73,8 +82,9 @@ class Client
     protected function sendClientRequest(
         string $method,
         string $resource,
-        array  $data
-    ): array {
+        array  $data = []
+    ): array
+    {
         $response = $this->client->request(
             $method,
             $resource,
