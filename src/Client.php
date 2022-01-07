@@ -4,7 +4,10 @@ namespace Teemill\ImageApi;
 
 use Firebase\JWT\JWT;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use JsonException;
+use Psr\Http\Message\ResponseInterface;
 
 class Client
 {
@@ -30,12 +33,21 @@ class Client
         $this->generateAuthenticationToken();
     }
 
+    public function exists(string $filename): bool
+    {
+        try {
+            return $this->sendClientRequest('HEAD', $filename)->getStatusCode() === 200;
+        } catch (ClientException $exception) {
+            return false;
+        }
+    }
+
     /**
      * @throws GuzzleException
      */
     public function upload(string $filename, $data): array
     {
-        return $this->sendClientRequest(
+        $response = $this->sendClientRequest(
             'POST',
             'upload',
             [
@@ -48,6 +60,8 @@ class Client
                 ],
             ]
         );
+
+        return $this->format($response);
     }
 
     /**
@@ -55,7 +69,9 @@ class Client
      */
     public function healthz(): array
     {
-        return $this->sendClientRequest('GET', 'healthz');
+        $response = $this->sendClientRequest('GET', 'healthz');
+
+        return $this->format($response);
     }
 
     public static function isCompatibleMime(string $mime): bool
@@ -82,8 +98,9 @@ class Client
         string $method,
         string $resource,
         array  $data = []
-    ): array {
-        $response = $this->client->request(
+    ): ResponseInterface
+    {
+        return $this->client->request(
             $method,
             $resource,
             array_merge_recursive([
@@ -93,7 +110,13 @@ class Client
                 ],
             ], $data)
         );
+    }
 
+    /**
+     * @throws JsonException
+     */
+    protected function format(ResponseInterface $response): array
+    {
         return json_decode(
             $response->getBody(),
             true,

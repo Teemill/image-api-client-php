@@ -20,7 +20,6 @@ it('can be instantiated with credentials', function () {
 
     expect($client)->toBeInstanceOf(ApiClient::class);
 });
-
 it('can upload an image to a specified directory', function () {
     $client = createMockClient([
         new Response(200, [], json_encode([
@@ -36,6 +35,7 @@ it('can upload an image to a specified directory', function () {
         ->id->toEqual('example.jpg')
         ->resource->toEqual('https://images.localhost:8080/example.jpg');
 });
+
 
 it('can perform a health check', function () {
     $client = createMockClient([
@@ -53,4 +53,14 @@ it('can perform a health check', function () {
         ->status->toEqual('UP')
         ->version->toEqual('0.0.1')
         ->cache->toEqual('connected');
+});
+
+it('can check if a file exists', function () {
+    $client = createMockClient([
+        new Response(200),
+        new Response(404),
+    ]);
+
+    expect($client->exists('should-exist.jpg'))->toBeTrue();
+    expect($client->exists('should-not-exist.jpg'))->toBeFalse();
 });
