@@ -82,6 +82,11 @@ class Client
         return StreamWrapper::getResource($response->getBody());
     }
 
+    public function metadata(string $path): array
+    {
+        return $this->sendClientRequest('HEAD', $path)->getHeaders();
+    }
+
     public static function isCompatibleMime(string $mime): bool
     {
         return in_array($mime, static::compatible_mimes);
