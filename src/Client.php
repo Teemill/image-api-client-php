@@ -88,8 +88,9 @@ class Client
 
         return [
             'size' => $response->getHeader('content-size'),
-            'mime' => $response->getHeader('content-type'),
-            'cache-control' => $response->getHeader('cache-control'),
+            'mimetype' => $response->getHeader('content-type'),
+            'timestamp' => time(),
+            'path' => "/$path",
         ];
     }
 
