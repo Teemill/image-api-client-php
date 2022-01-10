@@ -84,7 +84,13 @@ class Client
 
     public function metadata(string $path): array
     {
-        return $this->sendClientRequest('HEAD', $path)->getHeaders();
+        $response = $this->sendClientRequest('HEAD', $path);
+
+        return [
+            'size' => $response->getHeader('content-size'),
+            'mime' => $response->getHeader('content-type'),
+            'cache-control' => $response->getHeader('cache-control'),
+        ];
     }
 
     public static function isCompatibleMime(string $mime): bool
