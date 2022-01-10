@@ -106,8 +106,7 @@ class Client
         string $method,
         string $resource,
         array  $data = []
-    ): ResponseInterface
-    {
+    ): ResponseInterface {
         return $this->client->request(
             $method,
             $resource,
