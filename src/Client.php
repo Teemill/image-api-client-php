@@ -87,8 +87,8 @@ class Client
         $response = $this->sendClientRequest('HEAD', $path);
 
         return [
-            'size' => $response->getHeader('content-size'),
-            'mimetype' => $response->getHeader('content-type'),
+            'size' => $response->getHeader('content-size')[0],
+            'mimetype' => $response->getHeader('content-type')[0],
             'timestamp' => time(),
             'path' => "/$path",
         ];
