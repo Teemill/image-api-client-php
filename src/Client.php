@@ -6,6 +6,7 @@ use Firebase\JWT\JWT;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\StreamWrapper;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
 
@@ -72,6 +73,13 @@ class Client
         $response = $this->sendClientRequest('GET', 'healthz');
 
         return $this->format($response);
+    }
+
+    public function download(string $path)
+    {
+        $response = $this->sendClientRequest('GET', $path);
+
+        return StreamWrapper::getResource($response->getBody());
     }
 
     public static function isCompatibleMime(string $mime): bool
