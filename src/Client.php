@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\StreamWrapper;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
+use Teemill\ImageApi\Exceptions\ClientResponseException;
 
 class Client
 {
@@ -34,6 +35,9 @@ class Client
         $this->generateAuthenticationToken();
     }
 
+    /**
+     * @throws GuzzleException
+     */
     public function exists(string $filename): bool
     {
         try {
@@ -75,6 +79,9 @@ class Client
         return $this->format($response);
     }
 
+    /**
+     * @throws GuzzleException
+     */
     public function download(string $path)
     {
         $response = $this->sendClientRequest('GET', $path);
@@ -82,6 +89,9 @@ class Client
         return StreamWrapper::getResource($response->getBody());
     }
 
+    /**
+     * @throws GuzzleException
+     */
     public function metadata(string $path): array
     {
         $response = $this->sendClientRequest('HEAD', $path);
@@ -114,6 +124,9 @@ class Client
         );
     }
 
+    /**
+     * @throws GuzzleException
+     */
     protected function sendClientRequest(
         string $method,
         string $resource,
@@ -131,16 +144,17 @@ class Client
         );
     }
 
-    /**
-     * @throws JsonException
-     */
     protected function format(ResponseInterface $response): array
     {
-        return json_decode(
-            $response->getBody(),
-            true,
-            512,
-            JSON_THROW_ON_ERROR
-        );
+        try {
+            return json_decode(
+                $response->getBody(),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+        } catch (JsonException $exception) {
+            throw ClientResponseException::invalidJson($exception);
+        }
     }
 }

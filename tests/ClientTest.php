@@ -2,6 +2,7 @@
 
 use GuzzleHttp\Psr7\Response;
 use Teemill\ImageApi\Client as ApiClient;
+use Teemill\ImageApi\Exceptions\ClientResponseException;
 
 uses()->group('client');
 
@@ -63,4 +64,49 @@ it('can check if a file exists', function () {
 
     expect($client->exists('should-exist.jpg'))->toBeTrue();
     expect($client->exists('should-not-exist.jpg'))->toBeFalse();
+});
+
+it('can fetch the metadata for a file', function () {
+    $client = createMockClient([
+        new Response(202, [
+            'content-size' => 5000,
+            'content-type' => 'image/png',
+        ]),
+    ]);
+
+    expect($client->metadata('metadata.jpg'))
+        ->toBeArray()
+        ->toHaveKeys([
+            'size', 'mimetype',
+        ]);
+});
+
+it('can download a file', function () {
+    $client = createMockClient([
+        new Response(200, [
+            'content-size' => 5000,
+            'content-type' => 'image/png',
+        ], file_get_contents(__DIR__.'/fixtures/mock.jpeg')),
+    ]);
+
+    $response = $client->download('download.jpg');
+
+    $contents = stream_get_contents($response);
+
+    fclose($response);
+    unset($response);
+
+    $file_info = new finfo(FILEINFO_MIME_TYPE);
+
+    expect($file_info->buffer($contents))->toEqual('image/jpeg');
+});
+
+it('throws an exception when invalid JSON is received', function () {
+    $client = createMockClient([
+        new Response(200, [], '{invalid json}'),
+    ]);
+
+    $this->expectException(ClientResponseException::class);
+
+    $response = $client->healthz();
 });
