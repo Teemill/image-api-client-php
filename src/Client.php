@@ -4,7 +4,12 @@ namespace Teemill\ImageApi;
 
 use Firebase\JWT\JWT;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\StreamWrapper;
+use JsonException;
+use Psr\Http\Message\ResponseInterface;
+use Teemill\ImageApi\Exceptions\ClientResponseException;
 
 class Client
 {
@@ -33,9 +38,21 @@ class Client
     /**
      * @throws GuzzleException
      */
+    public function exists(string $filename): bool
+    {
+        try {
+            return $this->sendClientRequest('HEAD', $filename)->getStatusCode() === 200;
+        } catch (ClientException $exception) {
+            return false;
+        }
+    }
+
+    /**
+     * @throws GuzzleException
+     */
     public function upload(string $filename, $data): array
     {
-        return $this->sendClientRequest(
+        $response = $this->sendClientRequest(
             'POST',
             'upload',
             [
@@ -48,6 +65,8 @@ class Client
                 ],
             ]
         );
+
+        return $this->format($response);
     }
 
     /**
@@ -55,7 +74,34 @@ class Client
      */
     public function healthz(): array
     {
-        return $this->sendClientRequest('GET', 'healthz');
+        $response = $this->sendClientRequest('GET', 'healthz');
+
+        return $this->format($response);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function download(string $path)
+    {
+        $response = $this->sendClientRequest('GET', $path);
+
+        return StreamWrapper::getResource($response->getBody());
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function metadata(string $path): array
+    {
+        $response = $this->sendClientRequest('HEAD', $path);
+
+        return [
+            'size' => $response->getHeader('content-size')[0],
+            'mimetype' => $response->getHeader('content-type')[0],
+            'timestamp' => time(),
+            'path' => "/$path",
+        ];
     }
 
     public static function isCompatibleMime(string $mime): bool
@@ -78,12 +124,15 @@ class Client
         );
     }
 
+    /**
+     * @throws GuzzleException
+     */
     protected function sendClientRequest(
         string $method,
         string $resource,
         array  $data = []
-    ): array {
-        $response = $this->client->request(
+    ): ResponseInterface {
+        return $this->client->request(
             $method,
             $resource,
             array_merge_recursive([
@@ -93,12 +142,19 @@ class Client
                 ],
             ], $data)
         );
+    }
 
-        return json_decode(
-            $response->getBody(),
-            true,
-            512,
-            JSON_THROW_ON_ERROR
-        );
+    protected function format(ResponseInterface $response): array
+    {
+        try {
+            return json_decode(
+                $response->getBody(),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+        } catch (JsonException $exception) {
+            throw ClientResponseException::invalidJson($exception);
+        }
     }
 }
