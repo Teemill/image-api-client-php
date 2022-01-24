@@ -77,7 +77,7 @@ it('can fetch the metadata for a file', function () {
     expect($client->metadata('metadata.jpg'))
         ->toBeArray()
         ->toHaveKeys([
-            'length', 'mimetype',
+            'size', 'mimetype',
         ]);
 });
 
