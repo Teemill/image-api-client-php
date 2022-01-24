@@ -69,7 +69,7 @@ it('can check if a file exists', function () {
 it('can fetch the metadata for a file', function () {
     $client = createMockClient([
         new Response(202, [
-            'content-size' => 5000,
+            'content-length' => 5000,
             'content-type' => 'image/png',
         ]),
     ]);
@@ -77,14 +77,14 @@ it('can fetch the metadata for a file', function () {
     expect($client->metadata('metadata.jpg'))
         ->toBeArray()
         ->toHaveKeys([
-            'size', 'mimetype',
+            'length', 'mimetype',
         ]);
 });
 
 it('can download a file', function () {
     $client = createMockClient([
         new Response(200, [
-            'content-size' => 5000,
+            'content-length' => 5000,
             'content-type' => 'image/png',
         ], file_get_contents(__DIR__.'/fixtures/mock.jpeg')),
     ]);
