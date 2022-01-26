@@ -54,7 +54,7 @@ class Client
     {
         $response = $this->sendClientRequest(
             'POST',
-            'upload',
+            'store',
             [
                 'multipart' => [
                     [
