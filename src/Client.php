@@ -30,8 +30,7 @@ class Client
         ClientInterface $client,
         string          $secret,
         ?int            $token_expiration = null
-    )
-    {
+    ) {
         $this->secret = $secret;
         $this->client = $client;
 
@@ -137,8 +136,7 @@ class Client
         string $method,
         string $resource,
         array  $data = []
-    ): ResponseInterface
-    {
+    ): ResponseInterface {
         try {
             JWT::decode($this->token, $this->secret, [static::algorithm]);
         } catch (ExpiredException $exception) {

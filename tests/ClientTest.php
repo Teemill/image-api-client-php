@@ -1,12 +1,12 @@
 <?php
 
+use GuzzleHttp\Client as MockClient;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Teemill\ImageApi\AuthenticationException;
 use Teemill\ImageApi\Client as ApiClient;
 use Teemill\ImageApi\Exceptions\ClientResponseException;
-use GuzzleHttp\Client as MockClient;
 
 uses()->group('client');
 
