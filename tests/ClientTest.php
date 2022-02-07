@@ -1,8 +1,12 @@
 <?php
 
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use Teemill\ImageApi\AuthenticationException;
 use Teemill\ImageApi\Client as ApiClient;
 use Teemill\ImageApi\Exceptions\ClientResponseException;
+use GuzzleHttp\Client as MockClient;
 
 uses()->group('client');
 
@@ -21,6 +25,40 @@ it('can be instantiated with credentials', function () {
 
     expect($client)->toBeInstanceOf(ApiClient::class);
 });
+
+it('throws an exception when using an expired key', function () {
+    $client = new ApiClient(
+        new MockClient([
+            'handler' => HandlerStack::create(new MockHandler([
+                new Response(200, []),
+            ])),
+        ]),
+        'secret',
+        strtotime('-1 day') // Expired
+    );
+
+    $client->upload('example.jpg', 'example');
+})->throws(AuthenticationException::class, 'Authentication token expired.');
+
+it('can generate an authentication token', function () {
+    $client = new ApiClient(
+        new MockClient([
+            'handler' => HandlerStack::create(new MockHandler([
+                new Response(200, []),
+            ])),
+        ]),
+        'secret',
+    );
+
+    $old_token = $client->token;
+
+    expect($old_token)->not->toBeNull();
+
+    $client->generateAuthenticationToken(strtotime('+5 minutes'));
+
+    expect($client)->token->not->toEqual($old_token);
+});
+
 it('can upload an image to a specified directory', function () {
     $client = createMockClient([
         new Response(200, [], json_encode([

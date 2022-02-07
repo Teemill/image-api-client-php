@@ -2,6 +2,7 @@
 
 namespace Teemill\ImageApi;
 
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -23,16 +24,18 @@ class Client
 
     protected ClientInterface $client;
     protected string $secret;
-    protected string $token;
+    public string $token;
 
     public function __construct(
         ClientInterface $client,
-        string          $secret
-    ) {
+        string          $secret,
+        ?int            $token_expiration = null
+    )
+    {
         $this->secret = $secret;
         $this->client = $client;
 
-        $this->generateAuthenticationToken();
+        $this->generateAuthenticationToken($token_expiration);
     }
 
     /**
@@ -109,16 +112,18 @@ class Client
         return in_array($mime, static::compatible_mimes);
     }
 
-    protected function generateAuthenticationToken(): void
+    public function generateAuthenticationToken(?int $expiration = null): void
     {
         $timestamp = time();
 
         $this->token = JWT::encode(
-            [
-                'nbf' => $timestamp,
-                'iat' => $timestamp,
-                'exp' => strtotime('+1 day', $timestamp),
-            ],
+            array_merge(
+                [
+                    'nbf' => $timestamp,
+                    'iat' => $timestamp,
+                ],
+                $expiration ? ['exp' => $expiration] : []
+            ),
             $this->secret,
             static::algorithm
         );
@@ -126,12 +131,20 @@ class Client
 
     /**
      * @throws GuzzleException
+     * @throws AuthenticationException
      */
     protected function sendClientRequest(
         string $method,
         string $resource,
         array  $data = []
-    ): ResponseInterface {
+    ): ResponseInterface
+    {
+        try {
+            JWT::decode($this->token, $this->secret, [static::algorithm]);
+        } catch (ExpiredException $exception) {
+            throw AuthenticationException::tokenExpired();
+        }
+
         return $this->client->request(
             $method,
             $resource,
