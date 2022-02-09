@@ -2,7 +2,6 @@
 
 namespace Teemill\ImageApi;
 
-use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -14,27 +13,21 @@ use Teemill\ImageApi\Exceptions\ClientResponseException;
 
 class Client
 {
-    protected const algorithm = 'HS256';
-    protected const compatible_mimes = [
-        'image/webp',
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-    ];
+    protected const AUTHENTICATION_ALGORITHM = 'HS256';
+    protected const COMPATIBLE_MIMES = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
 
     protected ClientInterface $client;
     protected string $secret;
-    public string $token;
+    protected array $default_client_headers = [
+        'Accept' => 'application/json',
+    ];
 
     public function __construct(
         ClientInterface $client,
-        string          $secret,
-        ?int            $token_expiration = null
+        string          $secret
     ) {
         $this->secret = $secret;
         $this->client = $client;
-
-        $this->generateAuthenticationToken($token_expiration);
     }
 
     /**
@@ -54,7 +47,7 @@ class Client
      */
     public function upload(string $filename, $data): array
     {
-        $response = $this->sendClientRequest(
+        $response = $this->sendAuthenticatedClientRequest(
             'POST',
             'store',
             [
@@ -68,7 +61,7 @@ class Client
             ]
         );
 
-        return $this->format($response);
+        return $this->formatResponse($response);
     }
 
     /**
@@ -78,7 +71,7 @@ class Client
     {
         $response = $this->sendClientRequest('GET', 'healthz');
 
-        return $this->format($response);
+        return $this->formatResponse($response);
     }
 
     /**
@@ -108,54 +101,61 @@ class Client
 
     public static function isCompatibleMime(string $mime): bool
     {
-        return in_array($mime, static::compatible_mimes);
-    }
-
-    public function generateAuthenticationToken(?int $expiration = null): void
-    {
-        $timestamp = time();
-
-        $this->token = JWT::encode(
-            array_merge(
-                [
-                    'nbf' => $timestamp,
-                    'iat' => $timestamp,
-                ],
-                $expiration ? ['exp' => $expiration] : []
-            ),
-            $this->secret,
-            static::algorithm
-        );
+        return in_array($mime, static::COMPATIBLE_MIMES);
     }
 
     /**
      * @throws GuzzleException
-     * @throws AuthenticationException
      */
     protected function sendClientRequest(
         string $method,
         string $resource,
         array  $data = []
     ): ResponseInterface {
-        try {
-            JWT::decode($this->token, $this->secret, [static::algorithm]);
-        } catch (ExpiredException $exception) {
-            throw AuthenticationException::tokenExpired();
-        }
-
         return $this->client->request(
             $method,
             $resource,
             array_merge_recursive([
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => "Bearer $this->token",
-                ],
+                'headers' => $this->default_client_headers,
             ], $data)
         );
     }
 
-    protected function format(ResponseInterface $response): array
+    /**
+     * @throws GuzzleException
+     */
+    protected function sendAuthenticatedClientRequest(
+        string $method,
+        string $resource,
+        array  $data = []
+    ) {
+        return $this->client->request(
+            $method,
+            $resource,
+            array_merge_recursive([
+                'headers' => array_merge($this->default_client_headers, [
+                    'Authorization' => "Bearer {$this->generateAuthenticationToken()}",
+                ]),
+            ], $data)
+        );
+    }
+
+    protected function generateAuthenticationToken(): string
+    {
+        $timestamp = time();
+
+        return JWT::encode(
+            [
+                'nbf' => $timestamp,
+                'iat' => $timestamp,
+                'exp' => strtotime('+15 minutes'),
+            ],
+            $this->secret,
+            static::AUTHENTICATION_ALGORITHM
+        );
+    }
+
+    protected function formatResponse(ResponseInterface $response): array
     {
         try {
             return json_decode(
