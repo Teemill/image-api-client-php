@@ -13,6 +13,7 @@ it('can detect compatible mimes', function (string $mime, bool $valid) {
     ['image/jpeg', true],
     ['image/jpg', true],
     ['image/webp', true],
+    ['image/gif', true],
     ['image/pdf', false],
 ]);
 
