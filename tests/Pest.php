@@ -11,6 +11,6 @@ function createMockClient(array $mock_responses = []): ApiClient
         new MockClient([
             'handler' => HandlerStack::create(new MockHandler($mock_responses)),
         ]),
-        'secret'
+        'a]3Fz!Qr@8kL9mNp#2xYw$5vBcD7eGh'
     );
 }
