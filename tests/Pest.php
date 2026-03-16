@@ -11,6 +11,6 @@ function createMockClient(array $mock_responses = []): ApiClient
         new MockClient([
             'handler' => HandlerStack::create(new MockHandler($mock_responses)),
         ]),
-        'secret'
+        'this-is-a-test-secret-that-is-long-enough-for-hs256-validation!'
     );
 }

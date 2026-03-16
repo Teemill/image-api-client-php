@@ -14,7 +14,7 @@ use Teemill\ImageApi\Exceptions\ClientResponseException;
 class Client
 {
     protected const AUTHENTICATION_ALGORITHM = 'HS256';
-    protected const COMPATIBLE_MIMES = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
+    protected const COMPATIBLE_MIMES = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
 
     protected ClientInterface $client;
     protected string $secret;
