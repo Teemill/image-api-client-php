@@ -67,6 +67,14 @@ class Client
     /**
      * @throws GuzzleException
      */
+    public function delete(string $filename): void
+    {
+        $this->sendAuthenticatedClientRequest('DELETE', $filename);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
     public function healthz(): array
     {
         $response = $this->sendClientRequest('GET', 'healthz');
