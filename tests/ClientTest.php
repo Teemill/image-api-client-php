@@ -59,6 +59,18 @@ it('can delete a file', function () {
     expect($request->getHeaderLine('Authorization'))->toStartWith('Bearer ');
 });
 
+it('treats a missing file as already deleted', function () {
+    $history = [];
+
+    $client = createMockClient([
+        new Response(404),
+    ], $history);
+
+    $client->delete('example.jpg');
+
+    expect($history)->toHaveCount(1);
+});
+
 it('surfaces a failed delete so the caller can retry', function () {
     $client = createMockClient([
         new Response(500),

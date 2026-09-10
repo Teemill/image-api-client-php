@@ -71,7 +71,13 @@ class Client
     {
         $query = $project !== null ? '?'.http_build_query(['project' => $project]) : '';
 
-        $this->sendAuthenticatedClientRequest('DELETE', $filename.$query);
+        try {
+            $this->sendAuthenticatedClientRequest('DELETE', $filename.$query);
+        } catch (ClientException $exception) {
+            if ($exception->getResponse()?->getStatusCode() !== 404) {
+                throw $exception;
+            }
+        }
     }
 
     /**
