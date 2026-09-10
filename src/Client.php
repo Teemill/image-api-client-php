@@ -67,9 +67,11 @@ class Client
     /**
      * @throws GuzzleException
      */
-    public function delete(string $filename): void
+    public function delete(string $filename, ?string $project = null): void
     {
-        $this->sendAuthenticatedClientRequest('DELETE', $filename);
+        $query = $project !== null ? '?'.http_build_query(['project' => $project]) : '';
+
+        $this->sendAuthenticatedClientRequest('DELETE', $filename.$query);
     }
 
     /**
