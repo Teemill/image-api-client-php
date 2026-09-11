@@ -67,6 +67,22 @@ class Client
     /**
      * @throws GuzzleException
      */
+    public function delete(string $filename, ?string $project = null): void
+    {
+        $query = $project !== null ? '?'.http_build_query(['project' => $project]) : '';
+
+        try {
+            $this->sendAuthenticatedClientRequest('DELETE', $filename.$query);
+        } catch (ClientException $exception) {
+            if ($exception->getResponse()?->getStatusCode() !== 404) {
+                throw $exception;
+            }
+        }
+    }
+
+    /**
+     * @throws GuzzleException
+     */
     public function healthz(): array
     {
         $response = $this->sendClientRequest('GET', 'healthz');

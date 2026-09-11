@@ -1,5 +1,6 @@
 <?php
 
+use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Psr7\Response;
 use Teemill\ImageApi\Client as ApiClient;
 use Teemill\ImageApi\Exceptions\ClientResponseException;
@@ -39,6 +40,44 @@ it('can upload an image to a specified directory', function () {
         ->resource->toEqual('https://images.localhost:8080/example.jpg');
 });
 
+
+it('can delete a file', function () {
+    $history = [];
+
+    $client = createMockClient([
+        new Response(204),
+    ], $history);
+
+    $client->delete('example.jpg');
+
+    expect($history)->toHaveCount(1);
+
+    $request = $history[0]['request'];
+
+    expect($request->getMethod())->toEqual('DELETE');
+    expect((string) $request->getUri())->toEqual('example.jpg');
+    expect($request->getHeaderLine('Authorization'))->toStartWith('Bearer ');
+});
+
+it('treats a missing file as already deleted', function () {
+    $history = [];
+
+    $client = createMockClient([
+        new Response(404),
+    ], $history);
+
+    $client->delete('example.jpg');
+
+    expect($history)->toHaveCount(1);
+});
+
+it('surfaces a failed delete so the caller can retry', function () {
+    $client = createMockClient([
+        new Response(500),
+    ]);
+
+    $client->delete('example.jpg');
+})->throws(ServerException::class);
 
 it('can perform a health check', function () {
     $client = createMockClient([
