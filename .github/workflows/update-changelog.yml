@@ -4,24 +4,30 @@ on:
   release:
     types: [released]
 
+permissions:
+  contents: read
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # git-auto-commit-action pushes CHANGELOG.md to main
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Credentials stay persisted: git-auto-commit-action pushes with them.
+      - name: Checkout code # zizmor: ignore[artipacked]
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           ref: main
 
       - name: Update Changelog
-        uses: stefanzweifel/changelog-updater-action@v1
+        uses: stefanzweifel/changelog-updater-action@a938690fad7edf25368f37e43a1ed1b34303eb36 # v1.12.0
         with:
           latest-version: ${{ github.event.release.name }}
           release-notes: ${{ github.event.release.body }}
 
       - name: Commit updated CHANGELOG
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4.16.0
         with:
           branch: main
           commit_message: Update CHANGELOG
